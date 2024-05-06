@@ -130,9 +130,6 @@ export default {
 </script>
 
 <style>
-.container{
-  width: 150px;
-}
 .logo {
   max-width: 200px;
   height: auto;
