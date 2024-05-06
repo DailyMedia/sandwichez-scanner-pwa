@@ -9,7 +9,7 @@
         v-model="scannedData"
         @keydown.enter.prevent="handleScanInput"
         :class="{ 'is-invalid': invalidUrl }"
-        class="border border-1 w-75"
+        class="inputBarCode border border-1 w-75"
       />
       <button class="btn btn-primary mt-3 " @click="handleScanInput" :disabled="!listening">Escanear</button>
       <div v-if="invalidUrl" class="invalid-feedback">Ingresa una URL válida</div>
@@ -39,7 +39,8 @@ export default {
       answer: null,
       countdown: 5,
       listening: true,
-      invalidUrl: false
+      invalidUrl: false,
+      searchQueryTB: undefined
     };
   },
   mounted() {
@@ -73,7 +74,6 @@ export default {
           }
 
           const response = await axios.get(input);
-          console.log(response)
           if (response.status === 200 || response.status === 204) {
             this.result = 'ok';
             this.answer = response.data.answer.msg;
@@ -83,14 +83,13 @@ export default {
             this.answer = 'Lo sentimos, los datos introducidos no son correctos.';
           }
         } catch (error) {
-            console.log(error)
-            this.result = 'fail';
-            this.answer = 'Lo sentimos, algo ha salido mal.';
-          } finally {
-            this.loading = false;
-            this.scannedData = '';
-            this.listening = true;
-            this.inputRef.focus(); 
+          this.result = 'fail';
+          this.answer = 'Lo sentimos, algo ha salido mal.';
+        } finally {
+          this.loading = false;
+          this.scannedData = '';
+          this.listening = true;
+          this.inputRef.focus(); 
         }
       }
     },
@@ -105,7 +104,10 @@ export default {
       this.listening = true;
       this.countdown = 5;
       this.invalidUrl = false;
-      this.inputRef.focus();
+      this.$nextTick(() => {
+        this.inputRef = this.$refs.inputRef
+        this.inputRef.focus();
+      })
     }
   },
   watch: {
