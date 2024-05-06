@@ -66,7 +66,7 @@ export default {
         this.loading = true;
 
         try {
-          const urlRegex = /^https:\/\/sandwitchez-scanner-pwa-backend\.vercel\.app\/sumar-puntos\/.*$/;
+          const urlRegex = /^https:\/\/sandwichez-scanner-pwa-backend\.vercel\.app\/sumar-puntos\/.*$/;
           if (!urlRegex.test(input)) {
             this.invalidUrl = true;
             return;
