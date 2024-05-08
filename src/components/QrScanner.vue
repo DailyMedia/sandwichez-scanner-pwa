@@ -23,20 +23,29 @@
       </div>
     </template>
     <template v-if="result">
-      <p :class="result === 'ok' ? 'text-success' : 'text-danger'" class="mt-2">{{ answer }}</p>
+      <p
+        :class="[result === 'ok' ? 'text-success' : 'text-danger', achievedMaxValue ? 'text-bigger' : '']"
+        class="mt-2">
+          {{ answer }}
+      </p>
+      <img v-if="achievedMaxValue" :src=cofeeGif>
       <p class="mt-2">{{ countdownMsg }} en {{ countdown }} segundos</p>
       <button v-if="showButton" class="btn btn-primary" @click="continueScan">Volver</button>
     </template>
   </div>
+  
 </template>
 
 <script>
 import axios from 'axios';
+import { startConfettiInner } from '@/components/confetti.js';
+import { stopConfettiInner } from '@/components/confetti.js';
 
 export default {
   data() {
     return {
       logoSrc: require('@/assets/logo.png'),
+      cofeeGif: require('@/assets/coffee.gif'),
       scannedData: '',
       loading: false,
       result: null,
@@ -47,7 +56,8 @@ export default {
       invalidUrl: false,
       inputRef: null,
       showButton: true,
-      timer: null
+      timer: null,
+      achievedMaxValue: null
     };
   },
   mounted() {
@@ -69,12 +79,14 @@ export default {
           return;
         }
 
-        const response = await axios.get(input);
+        const response = await axios.get('http://localhost:3000/sumar-puntos/8zi3m40erx2wjixvf466387428b4726');
         this.result = response.status === 200 || response.status === 204 ? 'ok' : 'fail';
         this.answer = response.data.answer.msg;
         this.countdown = response.data.answer.countdown;
+        this.achievedMaxValue = response.data.answer.achievedMaxValue
         this.showButton = this.result === 'fail';
         this.countdownMsg = this.result === 'ok' ? 'Cerrando' : 'Volviendo';
+        this.achievedMaxValue ? startConfettiInner() : stopConfettiInner()
       } catch (error) {
         this.result = 'fail';
         this.answer = 'Lo sentimos, algo ha salido mal.';
@@ -120,9 +132,11 @@ export default {
     countdown(newCountdown) {
       if (newCountdown === 0) {
         if (this.result === 'ok') {
+          console.log('window.close()');
           window.close();
         } else {
           this.continueScan();
+          stopConfettiInner()
         }
       }
     }
@@ -135,5 +149,7 @@ export default {
   max-width: 200px;
   height: auto;
 }
+.text-bigger {
+  font-size: 22px
+}
 </style>
-
