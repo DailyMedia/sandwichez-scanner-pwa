@@ -23,14 +23,11 @@
       </div>
     </template>
     <template v-if="result">
-      <p
-        :class="[result === 'ok' ? 'text-success' : 'text-danger', achievedMaxValue ? 'text-bigger' : '']"
-        class="mt-2">
-          {{ answer }}
-      </p>
+      <p :class="resultClass" class="mt-2">{{ answer }}</p>
       <img v-if="achievedMaxValue" :src=cofeeGif>
       <p class="mt-2">{{ countdownMsg }} en {{ countdown }} segundos</p>
-      <button v-if="showButton" class="btn btn-primary" @click="continueScan">Volver</button>
+      <button v-if="showBackButton" class="btn btn-primary" @click="continueScan">Volver</button>
+      <button v-if="showCloseButton" class="btn btn-primary" @click="closeWindow">Cerrar</button>
     </template>
   </div>
   
@@ -38,8 +35,7 @@
 
 <script>
 import axios from 'axios';
-import { startConfettiInner } from '@/components/confetti.js';
-import { stopConfettiInner } from '@/components/confetti.js';
+import { startConfettiInner, stopConfettiInner } from '@/components/confetti.js';
 
 export default {
   data() {
@@ -55,7 +51,8 @@ export default {
       listening: true,
       invalidUrl: false,
       inputRef: null,
-      showButton: true,
+      showBackButton: true,
+      showCloseButton: false,
       timer: null,
       achievedMaxValue: null
     };
@@ -84,13 +81,14 @@ export default {
         this.answer = response.data.answer.msg;
         this.countdown = response.data.answer.countdown;
         this.achievedMaxValue = response.data.answer.achievedMaxValue
-        this.showButton = this.result === 'fail';
+        this.showBackButton = this.result === 'fail';
+        this.showCloseButton = this.result === 'ok';
         this.countdownMsg = this.result === 'ok' ? 'Cerrando' : 'Volviendo';
         this.achievedMaxValue ? startConfettiInner() : stopConfettiInner()
       } catch (error) {
         this.result = 'fail';
         this.answer = 'Lo sentimos, algo ha salido mal.';
-        this.showButton = true;
+        this.showBackButton = true;
         this.countdownMsg = 'Volviendo';
       } finally {
         this.loading = false;
@@ -114,12 +112,23 @@ export default {
         this.inputRef = this.$refs.inputRef
         this.inputRef.focus();
       })
+    },
+    closeWindow() {
+      window.close();
+    }
+  },
+  computed: {
+    resultClass() {
+      return [
+        this.result === 'ok' ? 'text-success' : 'text-danger',
+        this.achievedMaxValue ? 'text-bigger' : ''
+      ];
     }
   },
   watch: {
     result(newResult) {
       if (newResult) {
-        this.showButton = newResult === 'fail';
+        this.showBackButton = newResult === 'fail';
         this.timer = setInterval(() => {
           if (this.countdown > 0) {
             this.countdown--;
@@ -132,8 +141,7 @@ export default {
     countdown(newCountdown) {
       if (newCountdown === 0) {
         if (this.result === 'ok') {
-          console.log('window.close()');
-          window.close();
+          this.closeWindow();
         } else {
           this.continueScan();
           stopConfettiInner()
@@ -150,6 +158,6 @@ export default {
   height: auto;
 }
 .text-bigger {
-  font-size: 22px
+  font-size: 26px
 }
 </style>
