@@ -79,7 +79,7 @@ export default {
           return;
         }
 
-        const response = await axios.get('http://localhost:3000/sumar-puntos/8zi3m40erx2wjixvf466387428b4726');
+        const response = await axios.get(input);
         this.result = response.status === 200 || response.status === 204 ? 'ok' : 'fail';
         this.answer = response.data.answer.msg;
         this.countdown = response.data.answer.countdown;
