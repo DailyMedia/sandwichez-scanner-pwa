@@ -1,28 +1,32 @@
 <template>
   <div class="container text-center mt-4">
-    <img :src="require('@/assets/logo.png')" alt="Logo Sandwitchez" class="logo mb-5" />
-    <div v-if="!result" class="d-flex flex-column align-items-center">
-      <input
-        ref="inputRef"
-        type="text"
-        placeholder="Escanea el código..."
-        v-model="scannedData"
-        @keydown.enter.prevent="handleScanInput"
-        :class="{ 'is-invalid': invalidUrl }"
-        class="inputBarCode border border-1 w-75"
-      />
-      <button class="btn btn-primary mt-3 " @click="handleScanInput" :disabled="!listening">Escanear</button>
-      <div v-if="invalidUrl" class="invalid-feedback">Ingresa una URL válida</div>
-    </div>
-    <div v-if="loading" class="mt-2">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-2">Cargando...</p>
-    </div>
-    <div v-if="result">
+    <img :src="logoSrc" alt="Logo Sandwitchez" class="logo mb-5" />
+    <template v-if="!result">
+      <div class="d-flex flex-column align-items-center">
+        <input
+          ref="inputRef"
+          type="text"
+          placeholder="Escanea el código..."
+          v-model="scannedData"
+          @keydown.enter.prevent="handleKeyDown"
+          :class="{ 'is-invalid': invalidUrl }"
+          class="inputBarCode border border-1 w-75"
+        />
+        <button class="btn btn-primary mt-3" @click="handleScanInput" :disabled="!listening">Escanear</button>
+        <div v-if="invalidUrl" class="invalid-feedback">Ingresa una URL válida</div>
+      </div>
+    </template>
+    <template v-if="loading">
+      <div class="mt-2">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2">Cargando...</p>
+      </div>
+    </template>
+    <template v-if="result">
       <p :class="result === 'ok' ? 'text-success' : 'text-danger'" class="mt-2">{{ answer }}</p>
-      <p class="mt-2">Continuar en {{ countdown }} segundos</p>
-      <button class="btn btn-primary" @click="continueScan">Continuar</button>
-    </div>
+      <p class="mt-2">{{ countdownMsg }} en {{ countdown }} segundos</p>
+      <button v-if="showButton" class="btn btn-primary" @click="continueScan">Volver</button>
+    </template>
   </div>
 </template>
 
@@ -32,15 +36,18 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      inputRef: null,
+      logoSrc: require('@/assets/logo.png'),
       scannedData: '',
       loading: false,
       result: null,
       answer: null,
       countdown: 5,
+      countdownMsg: '',
       listening: true,
       invalidUrl: false,
-      searchQueryTB: undefined
+      inputRef: null,
+      showButton: true,
+      timer: null
     };
   },
   mounted() {
@@ -48,49 +55,36 @@ export default {
     this.inputRef.focus();
   },
   methods: {
-    async handleInput() {
-      this.listening = true;
-      this.invalidUrl = false;
-
-      if (this.timerId) {
-        clearTimeout(this.timerId);
-      }
-
-      this.timerId = setTimeout(() => {
-        this.handleScanInput();
-      }, 500);
-    },
     async handleScanInput() {
       const input = this.scannedData.trim();
-      if (input) {
-        this.listening = false;
-        this.loading = true;
+      if (!input) return;
 
-        try {
-          const urlRegex = /^https:\/\/sandwichez-scanner-pwa-backend\.vercel\.app\/sumar-puntos\/.*$/;
-          if (!urlRegex.test(input)) {
-            this.invalidUrl = true;
-            return;
-          }
+      this.listening = false;
+      this.loading = true;
 
-          const response = await axios.get(input);
-          if (response.status === 200 || response.status === 204) {
-            this.result = 'ok';
-            this.answer = response.data.answer.msg;
-            this.countdown = response.data.answer.countdown;
-          } else {
-            this.result = 'fail';
-            this.answer = 'Lo sentimos, los datos introducidos no son correctos.';
-          }
-        } catch (error) {
-          this.result = 'fail';
-          this.answer = 'Lo sentimos, algo ha salido mal.';
-        } finally {
-          this.loading = false;
-          this.scannedData = '';
-          this.listening = true;
-          this.inputRef.focus(); 
+      try {
+        const urlRegex = /^https:\/\/sandwichez-scanner-pwa-backend\.vercel\.app\/sumar-puntos\/.*$/;
+        if (!urlRegex.test(input)) {
+          this.invalidUrl = true;
+          return;
         }
+
+        const response = await axios.get(input);
+        this.result = response.status === 200 || response.status === 204 ? 'ok' : 'fail';
+        this.answer = response.data.answer.msg;
+        this.countdown = response.data.answer.countdown;
+        this.showButton = this.result === 'fail';
+        this.countdownMsg = this.result === 'ok' ? 'Cerrando' : 'Volviendo';
+      } catch (error) {
+        this.result = 'fail';
+        this.answer = 'Lo sentimos, algo ha salido mal.';
+        this.showButton = true;
+        this.countdownMsg = 'Volviendo';
+      } finally {
+        this.loading = false;
+        this.scannedData = '';
+        this.listening = true;
+        this.inputRef.focus();
       }
     },
     handleKeyDown(event) {
@@ -111,8 +105,9 @@ export default {
     }
   },
   watch: {
-    result() {
-      if (this.result) {
+    result(newResult) {
+      if (newResult) {
+        this.showButton = newResult === 'fail';
         this.timer = setInterval(() => {
           if (this.countdown > 0) {
             this.countdown--;
@@ -122,9 +117,13 @@ export default {
         clearInterval(this.timer);
       }
     },
-    countdown() {
-      if (this.countdown === 0) {
-        this.continueScan();
+    countdown(newCountdown) {
+      if (newCountdown === 0) {
+        if (this.result === 'ok') {
+          window.close();
+        } else {
+          this.continueScan();
+        }
       }
     }
   }
@@ -137,3 +136,4 @@ export default {
   height: auto;
 }
 </style>
+
