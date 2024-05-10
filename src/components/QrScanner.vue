@@ -114,6 +114,7 @@ export default {
       })
     },
     closeWindow() {
+      window.open(location.href, "_self", "");
       window.close();
     }
   },
