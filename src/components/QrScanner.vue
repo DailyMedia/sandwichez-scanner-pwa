@@ -114,8 +114,10 @@ export default {
       })
     },
     closeWindow() {
-      window.open(location.href, "_self", "");
-      window.close();
+      let new_window = open(location, '_self');
+      new_window.close();
+ 
+      return false;
     }
   },
   computed: {
