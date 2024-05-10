@@ -114,10 +114,7 @@ export default {
       })
     },
     closeWindow() {
-      let new_window = open(location, '_self');
-      new_window.close();
- 
-      return false;
+      window.close();
     }
   },
   computed: {
