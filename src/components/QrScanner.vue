@@ -1,34 +1,36 @@
 <template>
   <div class="container text-center mt-4">
     <img :src="logoSrc" alt="Logo Sandwitchez" class="logo mb-5" />
-    <template v-if="!result">
-      <div class="d-flex flex-column align-items-center">
-        <input
-          ref="inputRef"
-          type="text"
-          placeholder="Escanea el código..."
-          v-model="scannedData"
-          @keydown.enter.prevent="handleKeyDown"
-          :class="{ 'is-invalid': invalidUrl }"
-          class="inputBarCode border border-1 w-75"
-        />
-        <button class="btn btn-primary mt-3" @click="handleScanInput" :disabled="!listening">Escanear</button>
-        <div v-if="invalidUrl" class="invalid-feedback">Ingresa una URL válida</div>
-      </div>
-    </template>
-    <template v-if="loading">
-      <div class="mt-2">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-2">Cargando...</p>
-      </div>
-    </template>
-    <template v-if="result">
-      <p :class="resultClass" class="mt-2">{{ answer }}</p>
-      <img v-if="achievedMaxValue" :src=cofeeGif>
-      <p class="mt-2">{{ countdownMsg }} en {{ countdown }} segundos</p>
-      <button v-if="showBackButton" class="btn btn-primary" @click="continueScan">Volver</button>
-      <button v-if="showCloseButton" class="btn btn-primary" @click="closeWindow">Cerrar</button>
-    </template>
+    <div v-show=selectedStore>
+      <template v-if="!result">
+        <div class="d-flex flex-column align-items-center">
+          <input
+            ref="inputRef"
+            type="text"
+            placeholder="Escanea el código..."
+            v-model="scannedData"
+            @keydown.enter.prevent="handleKeyDown"
+            :class="{ 'is-invalid': invalidUrl }"
+            class="inputBarCode border border-1 w-75"
+          />
+          <button class="btn btn-primary mt-3" @click="handleScanInput" :disabled="!listening">Escanear</button>
+          <div v-if="invalidUrl" class="invalid-feedback">Ingresa una URL válida</div>
+        </div>
+      </template>
+      <template v-if="loading">
+        <div class="mt-2">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2">Cargando...</p>
+        </div>
+      </template>
+      <template v-if="result">
+        <p :class="resultClass" class="mt-2">{{ answer }}</p>
+        <img v-if="achievedMaxValue" :src=cofeeGif>
+        <p class="mt-2">{{ countdownMsg }} en {{ countdown }} segundos</p>
+        <button v-if="showBackButton" class="btn btn-primary" @click="continueScan">Volver</button>
+        <button v-if="showCloseButton" class="btn btn-primary" @click="closeWindow">Cerrar</button>
+      </template>
+    </div>
   </div>
   
 </template>
@@ -123,6 +125,9 @@ export default {
         this.result === 'ok' ? 'text-success' : 'text-danger',
         this.achievedMaxValue ? 'text-bigger' : ''
       ];
+    },
+    selectedStore() {
+      return this.$store.getters.selectedStore
     }
   },
   watch: {

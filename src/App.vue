@@ -1,14 +1,17 @@
 <template>
-  <QrScanner msg="Welcome to Your Vue.js App"/>
+  <QrScanner/>
+  <StoreIdentification/>
 </template>
 
 <script>
 import QrScanner from './components/QrScanner.vue'
+import StoreIdentification from './components/StoreIdentification.vue'
 
 export default {
   name: 'App',
   components: {
-    QrScanner
+    QrScanner,
+    StoreIdentification
   }
 }
 </script>
